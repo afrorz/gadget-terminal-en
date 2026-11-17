@@ -1,0 +1,15 @@
+site:
+  title: Gadget Terminal
+  tagline: "China-only gadgets, and whether you can actually get one."
+  description: "New gadgets launched only in China, explained in English, with a straight answer on how to get one outside China: import routes, global versions, certification and alternatives."
+  base_url: https://en.gadgetterminal.com
+  domain: en.gadgetterminal.com
+  lang: en
+  locale: en_US
+  author: Star Platinum LLC
+  contact_email: info@gadgetterminal.com
+  copyright_from: 2026
+  # Japanese edition (the parent site)
+  ja_url: https://gadgetterminal.com/
+  # Cloudflare Web Analytics token for this hostname. Empty = no analytics tag.
+  cf_analytics_token: ""
