@@ -1,0 +1,75 @@
+name: Daily articles
+
+on:
+  # 日本語版 GT の収集(02:30 JST 指定、実際は 05:00〜06:00 ごろ)のあとに走らせる。
+  # GitHub の定時実行は2〜3時間遅れることがあるので、実際に出るのは朝〜昼になる。
+  schedule:
+    - cron: "30 21 * * *"   # 06:30 JST
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "記事にしたい製品の URL(空なら候補から3本。複数はカンマ区切り)"
+        required: false
+        default: ""
+
+concurrency:
+  group: content-push
+  cancel-in-progress: false
+
+jobs:
+  write:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: 日本語版のダイジェストから中国がらみの候補を出す
+        run: python3 scripts/candidates.py
+
+      - name: Claude Code CLI を入れる
+        # claude-code-action 内蔵のインストールが失敗を握りつぶす不具合があるため自前で入れる(日本語版と同じ)
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/claude" --version
+
+      - uses: anthropics/claude-code-action@v1
+        env:
+          MANUAL_URL: ${{ github.event.inputs.url }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          show_full_output: true
+          claude_args: |
+            --max-turns 200
+            --allowedTools "WebSearch,WebFetch,Read,Write,Edit,Glob,Grep,Bash"
+          prompt: |
+            docs/daily-prompt.md を読み、その手順どおりに今日の記事を書いてください。
+            commit と push はしないでください(このあとのステップがします)。
+
+      - name: 点検を通った記事だけを公開する
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898388+github-actions[bot]@users.noreply.github.com"
+          new=$(git ls-files --others --exclude-standard content/posts)
+          [ -z "$new" ] && { echo "新しい記事なし"; exit 0; }
+          for f in $new; do
+            python3 scripts/check_posts.py "$f" || { echo "点検に通らないので外す: $f"; rm -f "$f"; }
+          done
+          python3 scripts/build.py
+          git add content/posts
+          git diff --cached --quiet && { echo "公開する記事なし"; exit 0; }
+          n=$(git diff --cached --name-only | wc -l)
+          git commit -m "Daily articles: $n new post(s)"
+          git push

@@ -3,6 +3,10 @@ name: Build and deploy
 on:
   push:
     branches: [main]
+  # 毎朝の記事づくりの push は GITHUB_TOKEN なので push では走らない。完了を合図に出す
+  workflow_run:
+    workflows: ["Daily articles"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:

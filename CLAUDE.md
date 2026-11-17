@@ -15,3 +15,10 @@
 - 画像は GT と同じ扱い: メーカー公式ページの画像を `thumbnail` にホットリンクし、`thumbnail_credit` に出典
 - front matter: `title` `slug` `date` `category`(phones/pc/gaming/audio/home/weird) `summary` `availability`(china-only/import/global) `sources`
 - 英文は短い文で。煽らない、感嘆符を使わない
+
+## 毎朝の自動の記事づくり(2026-11-18〜)
+
+- `.github/workflows/daily-article.yml` が毎日 06:30 JST 指定(実際は遅れる)で3本書く。手順と決まりは `docs/daily-prompt.md`(**記事の書き方を変えるときはここを直す**)
+- 流れ: `scripts/candidates.py` が日本語版のダイジェスト(公開リポジトリから読むだけ)から中国がらみの候補を `data/candidates.md` に出す → Claude が書く → `scripts/check_posts.py` に通らない記事は外す → push → `deploy.yml` が公開
+- Claude の利用枠を使う。鍵はリポジトリの secret `CLAUDE_CODE_OAUTH_TOKEN`
+- 手動で1本書かせる: Actions の「Daily articles」を Run workflow で URL を入れて回す
