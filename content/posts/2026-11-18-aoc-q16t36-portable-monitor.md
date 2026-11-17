@@ -3,7 +3,7 @@ title: "AOC's Q16T36 is a 16-inch 2.5K 120Hz portable monitor that, so far, is s
 slug: aoc-q16t36-portable-monitor
 date: 2026-11-18
 category: pc
-summary: "A 16-inch 2560×1600 IPS portable monitor with 120Hz, two USB-C ports and 45W pass-through charging. It costs 999 yuan on JD.com. AOC has not announced a sale outside China."
+summary: "A 16-inch 2.5K IPS portable monitor with 120Hz, two USB-C ports and 45W pass-through charging. It costs 999 yuan on JD.com. AOC has not announced a sale outside China."
 availability: china-only
 sources:
   - title: "AOC releases new portable monitor with dual USB-C, 45W charging and slim design"
@@ -17,16 +17,16 @@ sources:
     publisher: Gizmochina (search listing only; the page returned 403 and we did not read it)
 ---
 
-AOC has put a new portable monitor on sale in China. The Q16T36 has a 16-inch IPS panel at 2560×1600, a 120Hz refresh rate and two USB-C ports. It is listed on JD.com for 999 yuan at time of writing.
+AOC has put a new portable monitor on sale in China. The Q16T36 has a 16-inch 2.5K IPS panel, a 120Hz refresh rate and two USB-C ports. It is listed on JD.com for 999 yuan at time of writing.
 
-We could not read AOC's own product page or the JD.com listing. The specs below come from Notebookcheck and GuruHiTech, and the numbers match between them unless noted.
+We could not read AOC's own product page or the JD.com listing. The specs below come from Notebookcheck and GuruHiTech, and the numbers match between them unless noted. One number does not match across reports: the resolution. Notebookcheck lists 2560×1600, while the Chinese report from IT之家 lists QHD 2560×1440.
 
 ## Specs
 
 | | |
 | --- | --- |
 | Panel | 16-inch IPS, 8-bit |
-| Resolution | 2560×1600, 16:10 |
+| Resolution | 2.5K (2560×1600 per Notebookcheck, 2560×1440 per IT之家) |
 | Refresh rate | 120Hz (GuruHiTech adds 4ms GtG response) |
 | Brightness | 350 nits |
 | Contrast | 1,200:1 |
@@ -39,7 +39,7 @@ We could not read AOC's own product page or the JD.com listing. The specs below 
 
 ## Why it is interesting
 
-Most cheap portable monitors stay at 1080p and 60Hz. AOC's own 16-inch models sold outside China, such as the 16T3E and 16T3EA, are 1080p and 60Hz. The Q16T36 moves to a sharper 16:10 panel with a faster refresh rate at a price that is low for the specs.
+Most cheap portable monitors stay at 1080p and 60Hz. AOC's own 16-inch models sold outside China, such as the 16T3E and 16T3EA, are 1080p and 60Hz. The Q16T36 moves to a sharper 2.5K panel with a faster refresh rate at a price that is low for the specs.
 
 The 45W charging is a useful extra with a catch. It works as a pass-through for a laptop or phone, but the monitor needs its own power supply first. Over HDMI, the monitor also needs separate USB-C power.
 
