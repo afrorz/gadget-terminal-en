@@ -5,6 +5,8 @@ date: 2026-11-18
 category: home
 summary: "A 1,000-lumen rechargeable flashlight from Xiaomi's Mijia line, now in a Sand Gold colour. 99 yuan in China. Importers sell the older version abroad."
 availability: import
+product: "Mijia Flashlight"
+from: "PEK Beijing"
 thumbnail: "https://cdn.cnbj1.fds.api.mi-img.com/nr-upload-outer/F24A013A8C747004398A2DB655F57CB6_1794296049008.png"
 thumbnail_credit: "Xiaomi Mall (mi.com) official product page"
 sources:

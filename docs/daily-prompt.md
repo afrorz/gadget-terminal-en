@@ -50,6 +50,9 @@
    見つからないことは「We could not confirm」と書く。推測で埋めない。
 6. 記事を `content/posts/<TODAY>-<slug>.md` に書く。front matter と本文の形は既存の記事に合わせる。
    - `date: <TODAY>`。`availability` は china-only / import / global のどれか
+   - `product:` はトップの出発案内板に出す短い製品名(例: "GPD WIN Mini Ultra"、"Mijia Flashlight")。4語まで
+   - `from:` はメーカー本社の都市を「空港コード 都市名」で(例: "SZX Shenzhen"、"PEK Beijing"、"PVG Shanghai"、
+     "CAN Guangzhou"、"HGH Hangzhou")。公式サイトの会社情報などで確かめられたときだけ書き、分からなければ行ごと省く
    - 写真か動画を1つは付ける(付け方は下の「写真と動画」)。どちらも見つからなければ行ごと省く
    - 本文は 350〜700 語。見出しは `## Specs`(表)・`## Why it is interesting`・
      `## Can you get it outside China?` を基本にし、必要なら足す

@@ -13,7 +13,8 @@
 - 数字は公式ページと出典の記事にあるものだけ。分からないことは「We could not confirm」と書く
 - 価格・在庫には「at time of writing」を付ける。元(人民元)をドルに換算しない
 - 画像は GT と同じ扱い: メーカー公式ページの画像を `thumbnail` にホットリンクし、`thumbnail_credit` に出典。公式写真が無いときだけ、その製品の YouTube 動画を `video`(動画ID)+ `video_credit` で付ける(探し方は `docs/daily-prompt.md`)
-- front matter: `title` `slug` `date` `category`(phones/pc/gaming/audio/home/weird) `summary` `availability`(china-only/import/global) `sources`
+- front matter: `title` `slug` `date` `category`(phones/pc/gaming/audio/home/weird) `summary` `availability`(china-only/import/global) `sources`。任意で `product`(案内板の短い製品名)・`from`(本社の都市。例 "SZX Shenzhen")
+- 見た目は日本語版 GT と同じ(空港の出発案内板)。日本語版から写したスタイルは `design/gt-base.css`、英語版だけの追加は `scripts/build.py` の `EN_CSS`
 - 英文は短い文で。煽らない、感嘆符を使わない
 
 ## 毎朝の自動の記事づくり(2026-11-18〜)

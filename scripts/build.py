@@ -67,7 +67,7 @@ def parse_post(path: Path) -> dict | None:
     md = markdown.Markdown(extensions=["tables", "sane_lists"])
     body = md.convert(m.group(2))
     body = mark_outside_section(body)
-    body = body.replace("<table>", '<div class="table"><table>').replace("</table>", "</table></div>")
+    body = body.replace("<table>", '<div class="tbl"><table>').replace("</table>", "</table></div>")
     meta["body"] = body
     meta["url"] = f"/posts/{meta['slug']}/"
     return meta
@@ -86,83 +86,93 @@ def mark_outside_section(body: str) -> str:
 
 
 # ---------------------------------------------------------------- layout
+# The look is the Japanese edition's (airport terminal: departures board, gate codes).
+# design/gt-base.css is copied from gadgetterminal.com; EN_CSS adds the English-only parts.
 
-CSS = """
-:root{
-  --bg:#f6f7f9; --surface:#eff1f3; --raised:#e7eaed;
-  --ink:#1a1e24; --ink-2:#5c6570; --ink-3:#8d95a0;
-  --rule:#e7e9ec; --rule-2:#dadde1;
-  --accent:#ff6b3d; --warn:#b4472b;
-  --max:1120px; --measure:40rem;
-  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --disp:"Space Grotesk",system-ui,sans-serif;
-  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+NAV_LABELS = {"phones": "Phones", "pc": "PC", "gaming": "Gaming", "audio": "Audio",
+              "home": "Home", "weird": "Weird"}
+CAT_CODES = {
+    "phones": ("MOB", "#ff6b3d"),
+    "pc": ("PCS", "#4fb3c4"),
+    "gaming": ("GAM", "#9b8cff"),
+    "audio": ("AUD", "#e46aa8"),
+    "home": ("HOM", "#5ad19a"),
+    "weird": ("ODD", "#d9b45f"),
 }
-@media (prefers-color-scheme:dark){:root{
-  --bg:#0a0d16; --surface:#10141f; --raised:#151a27;
-  --ink:#e9edf1; --ink-2:#96a0ac; --ink-3:#5f6975;
-  --rule:#1c212e; --rule-2:#272e40; --warn:#e08b6a;
-}}
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.7 var(--sans)}
-a{color:inherit}
-img{max-width:100%;height:auto;display:block}
-.wrap{max-width:var(--max);margin:0 auto;padding:0 16px}
-header.site{border-bottom:1px solid var(--rule-2)}
-header.site .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
-.logo{font:700 20px/1 var(--disp);text-decoration:none;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
-.logo b{color:var(--accent)}
-.logo small{font:500 11px/1 var(--mono);color:var(--ink-3);border:1px solid var(--rule-2);padding:3px 5px;border-radius:3px}
-nav.top a{font:500 13px/1 var(--mono);color:var(--ink-2);text-decoration:none;margin-left:18px}
-nav.top a:hover{color:var(--accent)}
-.hero{padding:56px 0 40px;border-bottom:1px solid var(--rule)}
-.hero p.kicker{font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
-.hero h1{font:700 clamp(30px,5vw,48px)/1.1 var(--disp);letter-spacing:-.02em;margin:0;max-width:22ch}
-.hero p.lede{color:var(--ink-2);max-width:var(--measure);margin:16px 0 0}
-.list{padding:24px 0 64px}
-.card{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:24px 0;border-bottom:1px solid var(--rule);text-decoration:none}
-.card .thumb{aspect-ratio:4/3;background:var(--surface);border-radius:6px;overflow:hidden}
-.card .thumb img{width:100%;height:100%;object-fit:cover}
-.card .thumb.empty{display:flex;align-items:center;justify-content:center;font:600 13px/1 var(--mono);color:var(--ink-3)}
-.card h2{font:700 22px/1.3 var(--disp);letter-spacing:-.01em;margin:8px 0}
-.card:hover h2{color:var(--accent)}
-.card p{color:var(--ink-2);margin:0;font-size:15px}
-.meta{font:500 12px/1.4 var(--mono);color:var(--ink-3);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.badge{display:inline-block;font:600 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:4px 7px;border-radius:3px;border:1px solid currentColor}
-.badge.china-only{color:var(--warn)}
-.badge.import{color:#c68a12}
-.badge.global{color:#2f9e6a}
-article{max-width:var(--measure);margin:0 auto;padding:40px 0 64px}
-article h1{font:700 clamp(28px,4.4vw,40px)/1.15 var(--disp);letter-spacing:-.02em;margin:12px 0 16px}
-article .summary{font-size:19px;color:var(--ink-2);margin:0 0 24px}
-article figure{margin:0 0 28px}
-article figure img{border-radius:8px;background:var(--surface);width:100%}
-article figure.video iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:8px;background:var(--surface);display:block}
-article figcaption{font:12px/1.4 var(--mono);color:var(--ink-3);margin-top:8px}
-article h2{font:700 24px/1.25 var(--disp);margin:40px 0 12px;letter-spacing:-.01em}
-.table{overflow-x:auto;margin:16px 0}
-table{border-collapse:collapse;width:100%;font-size:15px}
-td,th{border-bottom:1px solid var(--rule-2);padding:9px 10px;text-align:left;vertical-align:top}
-thead{display:none}
-td:first-child{color:var(--ink-2);white-space:nowrap;font:500 13px/1.5 var(--mono)}
-.outside{background:var(--surface);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:4px 22px 10px;margin:40px 0}
+# availability -> (board status, status class, short note)
+STATUS = {
+    "china-only": ("CHINA ONLY", "st-urgent", "no global sale"),
+    "import": ("IMPORT", "st-warn", "via importers"),
+    "global": ("GLOBAL", "st-live", "sold worldwide"),
+}
+
+EN_CSS = """
+:root{--disp:"Space Grotesk",system-ui,sans-serif;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+""" + "".join(f".cat-{k}{{--cat:{c}}}\n" for k, (_, c) in CAT_CODES.items()) + """
+.brand-ed{font:600 9.5px/1 var(--mono);letter-spacing:.12em;color:var(--ink-3);border:1px solid var(--rule-2);
+  padding:3px 5px;border-radius:3px;margin-left:10px}
+.av{display:inline-block;font:600 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 6px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.av.china-only{color:var(--accent)}
+.av.import{color:#c08a1e}
+.av.global{color:#2f9e6a}
+[data-theme="dark"] .av.import{color:#d9b45f}
+[data-theme="dark"] .av.global{color:#5ad19a}
+.card{position:relative}
+.card-thumb{position:relative}
+.card-thumb .av{position:absolute;top:10px;left:10px;background:var(--bg);z-index:1}
+.card-thumb.empty{display:flex;flex-direction:column;justify-content:space-between;height:124px;padding:14px 16px;
+  background:#14172e;color:#e9edf1;font-family:var(--mono)}
+.card-thumb.empty .av{position:static;align-self:flex-start;background:transparent}
+.card-thumb.empty b{font:600 clamp(18px,2.2vw,26px)/1.2 var(--disp);letter-spacing:.01em}
+.card-thumb.empty small{font-size:10px;letter-spacing:.2em;color:#96a0ac}
+.grid-duo .card-thumb.empty{height:230px}
+@media (min-width:1101px){.hero-title,.hero-sub{max-width:calc(100% - 340px)}}
+.article-meta .av{margin-left:4px}
+.article-hero iframe{display:block;width:100%;aspect-ratio:16/9;border:0;background:#000}
+.prose .tbl{overflow-x:auto;margin:18px 0}
+.prose thead{display:none}
+.prose td:first-child{white-space:nowrap}
+.outside{background:var(--surface);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;
+  padding:2px 22px 8px;margin:38px 0 0}
 .outside h2{margin-top:20px}
 .outside li{margin:8px 0}
-.sources{border-top:1px solid var(--rule-2);margin-top:48px;padding-top:16px;font-size:14px;color:var(--ink-2)}
-.sources h3{font:600 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px}
-.sources ul{padding-left:18px;margin:0}
-.page h1{font:700 36px/1.2 var(--disp)}
-footer.site{border-top:1px solid var(--rule-2);padding:32px 0 48px;font-size:13px;color:var(--ink-3)}
-footer.site a{margin-right:16px}
-@media (max-width:640px){
-  .card{grid-template-columns:96px 1fr;gap:14px}
-  .card h2{font-size:17px}
-  .card p{display:none}
-  nav.top a{margin-left:12px}
-  .logo small{display:none}
-}
+.page-body{padding-bottom:64px}
 """
+
+
+def css_bundle() -> str:
+    return (ROOT / "design" / "gt-base.css").read_text(encoding="utf-8").strip() + "\n" + EN_CSS.strip() + "\n"
+
+
+THEME_BOOT = ('<script>(function(){try{if(localStorage.getItem("gt-theme")==="dark"){document.documentElement'
+              '.setAttribute("data-theme","dark");}}catch(e){}})();</script>')
+
+HEAD_JS = """<script>(function(){
+var h=document.currentScript.previousElementSibling;
+var mb=h.querySelector("[data-menu-toggle]");
+mb.addEventListener("click",function(){var o=h.classList.toggle("menu-open");
+  mb.setAttribute("aria-expanded",o?"true":"false");mb.setAttribute("aria-label",o?"Close menu":"Open menu");});
+h.querySelector("[data-theme-toggle]").addEventListener("click",function(){
+  var dark=document.documentElement.getAttribute("data-theme")==="dark";var next=dark?"light":"dark";
+  if(next==="dark")document.documentElement.setAttribute("data-theme","dark");
+  else document.documentElement.removeAttribute("data-theme");
+  try{localStorage.setItem("gt-theme",next);}catch(e){}});
+function tick(){var t=new Date(Date.now()+28800000);
+  var hh=String(t.getUTCHours()).padStart(2,"0"),mm=String(t.getUTCMinutes()).padStart(2,"0");
+  h.querySelectorAll('[data-clk="h"]').forEach(function(e){e.textContent=hh;});
+  h.querySelectorAll('[data-clk="m"]').forEach(function(e){e.textContent=mm;});}
+tick();setInterval(tick,20000);
+})();</script>"""
+
+
+def nav_html() -> str:
+    items = "".join(
+        f'<a href="/category/{k}/" class="nav-item cat-{k}"><span class="nav-code">{code}</span>'
+        f'<span class="nav-label">{esc(NAV_LABELS[k])}</span></a>'
+        for k, (code, _) in CAT_CODES.items())
+    return (items + '<a href="/about/" class="nav-item nav-about"><span class="nav-code">INF</span>'
+            '<span class="nav-label">About</span></a>')
 
 
 def head(site: dict, title: str, desc: str, path: str, image: str = "", ld: str = "",
@@ -194,26 +204,37 @@ def head(site: dict, title: str, desc: str, path: str, image: str = "", ld: str 
 <meta name="twitter:card" content="{'summary_large_image' if image else 'summary'}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
+{THEME_BOOT}
 {ld}
 {cf}
 </head>
 <body>
-<header class="site"><div class="wrap">
-<a class="logo" href="/">Gadget <b>Terminal</b> <small>EN</small></a>
-<nav class="top"><a href="/about/">About</a><a href="/feed.xml">RSS</a></nav>
-</div></header>
+<header class="site-head">
+<div class="wrap head-inner">
+<a class="brand" href="/"><span class="brand-name">Gadget Terminal</span><span class="caret" aria-hidden="true"></span><span class="brand-ed">EN</span></a>
+<nav class="nav">{nav_html()}</nav>
+<button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch dark or light mode"><span class="tt-ic tt-ic-moon" aria-hidden="true">☾</span><span class="tt-ic tt-ic-sun" aria-hidden="true">☀</span></button>
+<span class="head-clock" aria-hidden="true" title="Beijing time"><small>CST</small><b data-clk="h">--</b><i>:</i><b data-clk="m">--</b></span>
+<button type="button" class="menu-btn" data-menu-toggle aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</div>
+</header>
+{HEAD_JS}
 """
 
 
 def footer(site: dict) -> str:
     year = dt.date.today().year
     span = f"{site['copyright_from']}" if year == site["copyright_from"] else f"{site['copyright_from']}–{year}"
-    return f"""<footer class="site"><div class="wrap">
-<p><a href="/about/">About</a><a href="/privacy/">Privacy</a><a href="{esc(site['ja_url'])}" hreflang="ja">日本語版</a></p>
-<p>© {span} {esc(site['author'])}. Prices and availability are as of the date of each article.</p>
-</div></footer>
+    return f"""<footer class="site-foot"><div class="wrap">
+<div class="foot-board"><span class="foot-code">SYS</span><span class="foot-status">ONLINE</span>
+<span class="foot-social"><a href="/feed.xml">RSS</a></span>
+<span class="foot-tag">{esc(site['tagline'])}</span></div>
+<div class="foot-cols">
+<p class="foot-meta"><span class="foot-social-pc"><a href="/feed.xml">RSS</a></span><a href="/about/">About</a><a href="/privacy/">Privacy</a><a href="{esc(site['ja_url'])}" hreflang="ja">日本語版</a><a href="mailto:{esc(site['contact_email'])}">Contact</a></p>
+<p class="foot-copy">© {span} Gadget Terminal — {esc(site['author'])}. Prices and availability are as of the date of each article.</p>
+</div></div></footer>
 </body></html>
 """
 
@@ -223,7 +244,7 @@ def badge(p: dict) -> str:
     if a not in AVAILABILITY:
         return ""
     label, tip = AVAILABILITY[a]
-    return f'<span class="badge {a}" title="{esc(tip)}">{esc(label)}</span>'
+    return f'<span class="av {a}" title="{esc(tip)}">{esc(label)}</span>'
 
 
 def video_id(p: dict) -> str:
@@ -239,38 +260,121 @@ def card_image(p: dict) -> str:
     return f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg" if vid else ""
 
 
+def read_min(p: dict) -> int:
+    return max(1, round(len(re.findall(r"[A-Za-z]+", re.sub(r"<[^>]+>", " ", p["body"]))) / 220))
+
+
+def product_name(p: dict) -> str:
+    """Board KEY column. front matter `product`, else the first words of the title."""
+    if p.get("product"):
+        return str(p["product"])
+    return " ".join(re.sub(r"[\"“”]", "", p["title"]).split()[:4])
+
+
 def card(p: dict) -> str:
     img = card_image(p)
-    thumb = (f'<div class="thumb"><img src="{esc(img)}" alt="" loading="lazy" '
-             'referrerpolicy="no-referrer"></div>') if img else '<div class="thumb empty">GT</div>'
-    cat = CATEGORIES.get(p.get("category"), "")
-    return f"""<a class="card" href="{p['url']}">{thumb}<div>
-<div class="meta"><time datetime="{p['date']}">{p['date']:%b %d, %Y}</time><span>{esc(cat)}</span>{badge(p)}</div>
-<h2>{esc(p['title'])}</h2><p>{esc(p['summary'])}</p></div></a>"""
+    k = p.get("category") or ""
+    code = CAT_CODES.get(k, ("GT", ""))[0]
+    thumb = (f'<a class="card-thumb card-thumb-real" href="{p["url"]}" aria-hidden="true" tabindex="-1">{badge(p)}'
+             f'<img src="{esc(img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"></a>'
+             if img else
+             f'<a class="card-thumb empty" href="{p["url"]}" aria-hidden="true" tabindex="-1">{badge(p)}'
+             f'<b>{esc(product_name(p))}</b><small>GT · {code} · NO PHOTO YET</small></a>')
+    return f"""<article class="card cat-{k}">{thumb}
+<p class="card-meta"><a class="card-code" href="/category/{k}/">{code}</a><span class="card-cat">{esc(CATEGORIES.get(k, ''))}</span>
+<time datetime="{p['date']}">{p['date']:%Y.%m.%d}</time><span class="card-read">{read_min(p)}MIN</span></p>
+<h2 class="card-title"><a href="{p['url']}">{esc(p['title'])}</a></h2>
+<p class="card-excerpt">{esc(p['summary'])}</p>
+</article>"""
+
+
+def board_row(p: dict, n: int) -> str:
+    k = p.get("category") or ""
+    code = CAT_CODES.get(k, ("GT", ""))[0]
+    frm_code, _, frm_city = str(p.get("from") or "CN China").partition(" ")
+    st, cls, note = STATUS.get(p.get("availability"), ("TBC", "st-plain", ""))
+    img = card_image(p)
+    thumb = (f'<img src="{esc(img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" '
+             'width="96" height="96">' if img else "")
+    return f"""<a class="board-row cat-{k}" href="{p['url']}">
+<span class="b-thumb" aria-hidden="true">{thumb}</span>
+<span class="b-flt">GT {n:04d}</span>
+<span class="b-from"><b>{esc(frm_code)}</b><span>{esc(frm_city)}</span></span>
+<span class="b-code">{code}</span>
+<span class="b-key"><b>{esc(product_name(p))}</b><small class="b-what">{esc(p['summary'])}</small></span>
+<span class="b-title">{esc(p['title'])}</span>
+<span class="st {cls}">{st}<em>{esc(note)}</em></span>
+<span class="b-arrow" aria-hidden="true">→</span>
+</a>"""
+
+
+PLANE = ('<svg class="pict-arr" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="rotate(-22 12 11)">'
+         '<path d="M21 11 L14.5 11.8 L10 17 L7.5 17 L9.8 11.9 L4.5 12 L3 14 L1.5 14 L2.6 11 L1.5 8 L3 8 L4.5 10 '
+         'L9.8 10.1 L7.5 5 L10 5 L14.5 10.2 Z"></path></g><rect x="2.5" y="20" width="19" height="1.5" rx=".75"></rect></svg>')
+
+
+def board(posts: list[dict], total: int) -> str:
+    rows = "\n".join(board_row(p, total - i) for i, p in enumerate(posts))
+    return f"""<section class="board">
+<h2 class="visually-hidden">Departures</h2>
+<div class="board-title"><span class="board-tab" aria-selected="true">{PLANE}<span class="board-title-en">DEPARTURES</span><span class="board-tab-ja">Latest from China</span></span></div>
+<div class="board-head"><span>FLIGHT</span><span>FROM</span><span>CAT</span><span>KEY</span><span>ENTRY</span><span>OUTSIDE CHINA</span><span></span></div>
+{rows}
+</section>"""
+
+
+def grid(posts: list[dict]) -> str:
+    if not posts:
+        return '<p class="empty">No articles yet.</p>'
+    duo, rest = posts[:2], posts[2:]
+    out = '<div class="grid grid-duo">' + "".join(card(p) for p in duo) + "</div>"
+    if rest:
+        out += '<div class="grid">' + "".join(card(p) for p in rest) + "</div>"
+    return out
 
 
 def render_index(site: dict, posts: list[dict]) -> str:
-    cards = "\n".join(card(p) for p in posts)
-    return head(site, site["title"], site["description"], "/") + f"""<main>
-<section class="hero"><div class="wrap">
-<p class="kicker">Gadget Terminal / English edition</p>
-<h1>{esc(site['tagline'])}</h1>
-<p class="lede">{esc(site['description'])}</p>
-</div></section>
-<section class="list"><div class="wrap">{cards}</div></section>
+    return head(site, site["title"], site["description"], "/") + f"""<main class="wrap home">
+<section class="hero">
+<p class="eyebrow">CHINA ONLY / ENGLISH EDITION</p>
+<h1 class="hero-title">{esc(site['tagline'])}</h1>
+<p class="hero-sub">{esc(site['description'])}</p>
+<img class="hero-route" src="/assets/hero-plane.png" alt="" aria-hidden="true">
+</section>
+{board(posts[:6], len(posts))}
+{grid(posts)}
+</main>""" + footer(site)
+
+
+def render_category(site: dict, key: str, posts: list[dict]) -> str:
+    code = CAT_CODES[key][0]
+    name = CATEGORIES[key]
+    path = f"/category/{key}/"
+    count = f"{len(posts)} article{'s' if len(posts) != 1 else ''}"
+    return head(site, name, f"{name}: China-only gadgets explained in English.", path) + f"""<main class="wrap home cat-{key}">
+<section class="hero hero-sm">
+<p class="eyebrow">GATE {code} / {esc(name)}</p>
+<h1 class="hero-title">{esc(name)}</h1>
+<p class="hero-sub">{count}. China-only gadgets, and whether you can get one outside China.</p>
+</section>
+{grid(posts)}
 </main>""" + footer(site)
 
 
 def render_post(site: dict, p: dict) -> str:
+    k = p.get("category") or ""
+    code = CAT_CODES.get(k, ("GT", ""))[0]
     fig = ""
     if p.get("thumbnail"):
-        credit = f"<figcaption>Image: {esc(p.get('thumbnail_credit'))}</figcaption>" if p.get("thumbnail_credit") else ""
-        fig = (f'<figure><img src="{esc(p["thumbnail"])}" alt="{esc(p["title"])}" '
-               f'referrerpolicy="no-referrer">{credit}</figure>')
+        credit = (f'<figcaption class="hero-credit">Image: {esc(p.get("thumbnail_credit"))}</figcaption>'
+                  if p.get("thumbnail_credit") else "")
+        fig = (f'<figure class="article-hero article-hero-real"><img src="{esc(p["thumbnail"])}" alt="{esc(p["title"])}" '
+               f'decoding="async" referrerpolicy="no-referrer">{credit}</figure>')
     vid = video_id(p)
     if vid:
-        vcredit = f"<figcaption>Video: {esc(p.get('video_credit'))}</figcaption>" if p.get("video_credit") else ""
-        fig += (f'<figure class="video"><iframe src="https://www.youtube-nocookie.com/embed/{vid}" '
+        vcredit = (f'<figcaption class="hero-credit">Video: {esc(p.get("video_credit"))}</figcaption>'
+                   if p.get("video_credit") else "")
+        fig += (f'<figure class="article-hero video"><iframe src="https://www.youtube-nocookie.com/embed/{vid}" '
                 f'title="{esc(p["title"])}" loading="lazy" allowfullscreen '
                 'allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"></iframe>'
                 f'{vcredit}</figure>')
@@ -278,9 +382,11 @@ def render_post(site: dict, p: dict) -> str:
     if p.get("sources"):
         items = "".join(
             f'<li><a href="{esc(s["url"])}" rel="nofollow noopener" target="_blank">{esc(s.get("title") or s["url"])}</a>'
-            f'{" — " + esc(s["publisher"]) if s.get("publisher") else ""}</li>'
+            + (f'<span class="src-pub">{esc(s["publisher"])}</span>' if s.get("publisher") else "") + "</li>"
             for s in p["sources"])
-        srcs = f'<aside class="sources"><h3>Sources</h3><ul>{items}</ul></aside>'
+        srcs = (f'<section class="sources"><h2>Sources</h2><ol>{items}</ol>'
+                '<p class="sources-note">We wrote this article from the sources above. Prices and availability are '
+                'as of the date of the article. Check the official pages before you buy.</p></section>')
     ld = {
         "@context": "https://schema.org", "@type": "NewsArticle",
         "headline": p["title"], "description": p["summary"],
@@ -293,25 +399,28 @@ def render_post(site: dict, p: dict) -> str:
     if card_image(p):
         ld["image"] = [card_image(p)]
     ld_tag = f'<script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>'
-    cat = CATEGORIES.get(p.get("category"), "")
-    return head(site, p["title"], p["summary"], p["url"], card_image(p), ld_tag, "article") + f"""<main><div class="wrap">
-<article>
-<div class="meta"><time datetime="{p['date']}">{p['date']:%b %d, %Y}</time><span>{esc(cat)}</span>{badge(p)}</div>
-<h1>{esc(p['title'])}</h1>
-<p class="summary">{esc(p['summary'])}</p>
+    return head(site, p["title"], p["summary"], p["url"], card_image(p), ld_tag, "article") + f"""<main class="wrap article-wrap">
+<article class="article cat-{k}">
+<p class="eyebrow"><a href="/category/{k}/"><span class="eyebrow-code">{code}</span>{esc(CATEGORIES.get(k, ''))}</a></p>
+<h1 class="article-title">{esc(p['title'])}</h1>
+<p class="article-lede">{esc(p['summary'])}</p>
+<p class="article-meta"><time datetime="{p['date']}">{p['date']:%Y.%m.%d}</time><span class="dot"></span>{read_min(p)} MIN READ<span class="dot"></span>{badge(p)}</p>
 {fig}
-{p['body']}
+<div class="prose">{p['body']}</div>
 {srcs}
 </article>
-</div></main>""" + footer(site)
+</main>""" + footer(site)
 
 
 def render_page(site: dict, path: str, title: str, desc: str, body_md: str) -> str:
     body = markdown.markdown(body_md, extensions=["tables"])
-    return head(site, title, desc, path) + f"""<main><div class="wrap"><article class="page">
-<h1>{esc(title)}</h1>
-{body}
-</article></div></main>""" + footer(site)
+    return head(site, title, desc, path) + f"""<main class="wrap article-wrap page-body">
+<article class="article">
+<p class="eyebrow">INF / Gadget Terminal</p>
+<h1 class="article-title">{esc(title)}</h1>
+<div class="prose">{body}</div>
+</article>
+</main>""" + footer(site)
 
 
 ABOUT = """Gadget Terminal covers new gadgets that launch **only in China**: on Xiaomi Youpin, JD.com, Tmall and Chinese crowdfunding platforms.
@@ -361,6 +470,7 @@ Articles link to official product pages and news sources. Those sites have their
 def render_sitemap(site: dict, posts: list[dict]) -> str:
     urls = [("/", posts[0]["date"] if posts else dt.date.today())]
     urls += [(p["url"], p.get("modified") or p["date"]) for p in posts]
+    urls += [(f"/category/{k}/", None) for k in CATEGORIES]
     urls += [("/about/", None), ("/privacy/", None)]
     rows = "".join(
         f"<url><loc>{site['base_url']}{u}</loc>{f'<lastmod>{d}</lastmod>' if d else ''}</url>" for u, d in urls)
@@ -402,12 +512,14 @@ def build() -> int:
     (PUBLIC / "assets").mkdir()
     for f in STATIC.glob("*"):
         shutil.copy(f, PUBLIC / "assets" / f.name)
-    (PUBLIC / "assets" / "style.css").write_text(CSS.strip() + "\n", encoding="utf-8")
+    (PUBLIC / "assets" / "style.css").write_text(css_bundle(), encoding="utf-8")
 
     fill = {"author": site["author"], "ja_url": site["ja_url"], "email": site["contact_email"]}
     write("/", render_index(site, posts))
     for p in posts:
         write(p["url"], render_post(site, p))
+    for key in CATEGORIES:
+        write(f"/category/{key}/", render_category(site, key, [p for p in posts if p.get("category") == key]))
     write("/about/", render_page(site, "/about/", "About Gadget Terminal",
                                  "What Gadget Terminal covers and how we write.", ABOUT.format(**fill)))
     write("/privacy/", render_page(site, "/privacy/", "Privacy Policy",
