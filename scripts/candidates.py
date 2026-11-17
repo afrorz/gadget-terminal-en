@@ -56,6 +56,36 @@ def load_digest(day: dt.date, local: Path | None) -> list[dict]:
     return data.get("items", [])
 
 
+# Sites that refuse WebFetch but publish full article text in their RSS feed.
+# Reading the feed is the intended machine-readable route, so we use that instead.
+FULLTEXT_FEEDS = ["https://www.gizmochina.com/feed/"]
+
+
+def feed_fulltext() -> dict[str, str]:
+    """Map article URL -> plain text from RSS <content:encoded>."""
+    import html
+    import xml.etree.ElementTree as ET
+
+    out: dict[str, str] = {}
+    ns = {"content": "http://purl.org/rss/1.0/modules/content/"}
+    for feed in FULLTEXT_FEEDS:
+        try:
+            req = urllib.request.Request(feed, headers={"User-Agent": "GadgetTerminalEN-feedreader/1.0"})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                root = ET.fromstring(r.read())
+        except Exception as e:  # noqa: BLE001
+            print(f"feed {feed}: {e}", file=sys.stderr)
+            continue
+        for item in root.iter("item"):
+            link = (item.findtext("link") or "").strip().rstrip("/")
+            body = item.findtext("content:encoded", default="", namespaces=ns)
+            text = html.unescape(re.sub(r"<[^>]+>", " ", body))
+            text = re.sub(r"[ \t]+", " ", re.sub(r"\n\s*\n+", "\n\n", text)).strip()
+            if link and text:
+                out[link] = text
+    return out
+
+
 def covered_urls() -> set[str]:
     urls: set[str] = set()
     for f in (ROOT / "content" / "posts").glob("*.md"):
@@ -92,6 +122,10 @@ def main() -> None:
         picked.append(it)
     picked.sort(key=lambda x: (x["_digest"], x.get("score", 0)), reverse=True)
 
+    full = feed_fulltext()
+    ftdir = a.out.parent / "fulltext"
+    ftdir.mkdir(parents=True, exist_ok=True)
+
     lines = [f"# Candidates {today.isoformat()} ({len(picked)} items)", ""]
     for i, it in enumerate(picked, 1):
         lines += [
@@ -99,6 +133,11 @@ def main() -> None:
             f"- source: {it.get('source')} / digest {it['_digest']} / score {it.get('score')}",
             f"- url: {it.get('url')}",
         ]
+        body = full.get((it.get("url") or "").rstrip("/"))
+        if body:
+            fp = ftdir / f"{it.get('id', i)}.txt"
+            fp.write_text(body, encoding="utf-8")
+            lines.append(f"- fulltext (from the site's RSS feed): {fp.relative_to(ROOT).as_posix()}")
         for u in it.get("related_urls") or []:
             lines.append(f"- related: {u}")
         lines += [f"- summary: {(it.get('summary') or '').strip()[:400]}", ""]
