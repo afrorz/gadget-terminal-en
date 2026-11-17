@@ -50,14 +50,46 @@
    見つからないことは「We could not confirm」と書く。推測で埋めない。
 6. 記事を `content/posts/<TODAY>-<slug>.md` に書く。front matter と本文の形は既存の記事に合わせる。
    - `date: <TODAY>`。`availability` は china-only / import / global のどれか
-   - `thumbnail` はメーカー公式ページ(公式の店を含む)の製品画像の URL。ほかのニュースサイトの画像は
-     使わない。見つからなければ thumbnail と thumbnail_credit の行ごと省く
+   - 写真か動画を1つは付ける(付け方は下の「写真と動画」)。どちらも見つからなければ行ごと省く
    - 本文は 350〜700 語。見出しは `## Specs`(表)・`## Why it is interesting`・
      `## Can you get it outside China?` を基本にし、必要なら足す
    - `## Can you get it outside China?` の最初の1行は、答えを太字で1文(例: **Yes, through an importer, but not from Lenovo.**)。
      続けて Where / The catch / Global version / Alternatives you can buy locally を箇条書きで
-7. 3本書いたら `python3 scripts/check_posts.py content/posts/<TODAY>-*.md` と
+7. 3本書いたら `python3 scripts/check_posts.py --online content/posts/<TODAY>-*.md` と
    `python3 scripts/build.py` を実行する。NG が出たら直す。直せない記事は消す。
+   `--online` は写真が開けるか・動画が実在するかも確かめる。写真が開けないときは写真の行を消して直す
+   (記事ごと消さない)。
+8. 最後の報告に、写真も動画も付けられなかった記事と、写真を探しに行った先(開けなかった URL)を書く。
+
+## 写真と動画
+
+上から順に試して、取れたところで止める。**1本ごとに必ず探す。** 出典がニュースサイトだけで終わらせない。
+
+1. **メーカー公式の製品写真**(`thumbnail` + `thumbnail_credit`)
+   - 公式の製品ページを探す: WebSearch で「<ブランド> <型番>」「<ブランド> <型番> 官网」。
+     中国のメーカーも英語の世界向けサイトを持っていることが多い(例: gpd.hk、mi.com/global、ugreen.com)
+   - 製品ページの写真の URL は、WebFetch に「このページの og:image と、製品写真の画像 URL を全部、そのまま書き出して」と頼んで取る。
+     WebFetch は本文を文章にして返すので、普通に読むと写真の URL が落ちる。必ずこの頼み方をする
+   - `curl -sL <製品ページ> | grep -oE 'og:image[^>]*'` でも取れることがある
+   - 使ってよいのはメーカー公式サイトと公式の店(mi.com、Youpin、JD/Tmall の公式店)の写真だけ。
+     ニュースサイト・輸入店・AliExpress の写真は使わない
+   - その製品の写真であること(色違い・前の世代・別の型番でないこと)を、画像の URL やページの説明で確かめる
+2. **YouTube の動画**(`video` + `video_credit`)。公式写真が無いときだけ
+   - WebSearch で「<ブランド> <型番>」を `allowed_domains: ["youtube.com"]` で探す
+   - **その製品そのものの動画だけ。** 同じブランドの別の型番・前の世代の動画は使わない。見つからなければ付けない
+   - メーカー公式チャンネル > 実機を触っているレビュー の順に選ぶ
+   - 動画 ID(11文字)が実在するかを
+     `curl -s "https://www.youtube.com/oembed?url=https%3A//www.youtube.com/watch%3Fv%3D<ID>&format=json"` で確かめ、
+     返ってきた `title` が製品名を含むこと、`author_name` をチャンネル名として使う
+   - カードには動画のサムネイルが、記事には動画の埋め込みが出る
+
+```yaml
+thumbnail: "https://www.gpd.hk/...product.png"
+thumbnail_credit: "GPD official product page"
+# 公式写真が無いときだけ
+video: A3nAnuGMrbU
+video_credit: "ETA PRIME on YouTube (hands-on)"
+```
 
 ## 絶対に破らないこと
 

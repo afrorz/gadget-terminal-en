@@ -2,11 +2,17 @@
 
     python scripts/check_posts.py              # all posts
     python scripts/check_posts.py FILE [FILE]  # only these
+    python scripts/check_posts.py --online FILE  # also open the image / video URLs
+
+--online: the thumbnail must return an image and the YouTube video must exist
+(checked through YouTube's oEmbed). A post with neither prints a warning, not an error.
 """
 from __future__ import annotations
 
 import re
 import sys
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 import yaml
@@ -16,9 +22,38 @@ CATEGORIES = {"phones", "pc", "gaming", "audio", "home", "weird"}
 AVAILABILITY = {"china-only", "import", "global"}
 REQUIRED = ["title", "slug", "date", "category", "summary", "availability", "sources"]
 OUTSIDE = "## Can you get it outside China?"
+UA = "GadgetTerminalEN-check/1.0 (+https://en.gadgetterminal.com/)"
 
 
-def check(path: Path) -> list[str]:
+def fetch_ok(url: str, want: str) -> tuple[bool, str]:
+    """Return (ok, reason). want: 'image' or 'json'."""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            ctype = r.headers.get("Content-Type", "")
+            if want == "image" and not ctype.startswith("image/"):
+                return False, f"not an image ({ctype or 'no content type'})"
+            return True, ""
+    except Exception as e:  # noqa: BLE001
+        return False, str(e)[:80]
+
+
+def check_online(fm: dict) -> list[str]:
+    errs = []
+    if fm.get("thumbnail"):
+        ok, why = fetch_ok(str(fm["thumbnail"]), "image")
+        if not ok:
+            errs.append(f"thumbnail does not load: {why}")
+    vid = str(fm.get("video") or "")
+    if vid:
+        q = urllib.parse.quote(f"https://www.youtube.com/watch?v={vid}", safe="")
+        ok, why = fetch_ok(f"https://www.youtube.com/oembed?url={q}&format=json", "json")
+        if not ok:
+            errs.append(f"video {vid} not found on YouTube: {why}")
+    return errs
+
+
+def check(path: Path, online: bool = False) -> list[str]:
     errs: list[str] = []
     text = path.read_text(encoding="utf-8")
     m = re.match(r"^---\n(.*?)\n---\n(.*)$", text, re.S)
@@ -47,6 +82,13 @@ def check(path: Path) -> list[str]:
             errs.append(f"bad source {s}")
     if fm.get("thumbnail") and not fm.get("thumbnail_credit"):
         errs.append("thumbnail without thumbnail_credit")
+    if fm.get("video"):
+        if not re.fullmatch(r"[A-Za-z0-9_-]{11}", str(fm["video"])):
+            errs.append(f"bad video id {fm['video']} (use the 11-character YouTube ID)")
+        if not fm.get("video_credit"):
+            errs.append("video without video_credit")
+    if online:
+        errs += check_online(fm)
 
     if OUTSIDE not in body:
         errs.append(f"missing section '{OUTSIDE}'")
@@ -63,15 +105,20 @@ def check(path: Path) -> list[str]:
 
 
 def main() -> int:
-    files = [Path(a) for a in sys.argv[1:]] or sorted((ROOT / "content" / "posts").glob("*.md"))
+    args = sys.argv[1:]
+    online = "--online" in args
+    files = [Path(a) for a in args if a != "--online"] or sorted((ROOT / "content" / "posts").glob("*.md"))
     bad = 0
     for f in files:
-        errs = check(f)
+        errs = check(f, online)
         if errs:
             bad += 1
             print(f"NG {f.name}: " + "; ".join(errs))
         else:
             print(f"OK {f.name}")
+        text = f.read_text(encoding="utf-8")
+        if not re.search(r"^(thumbnail|video):\s*\S", text.split("\n---", 1)[0], re.M):
+            print(f"   warning: {f.name} has no photo or video")
     return 1 if bad else 0
 
 

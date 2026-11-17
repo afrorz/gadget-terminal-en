@@ -138,6 +138,7 @@ article h1{font:700 clamp(28px,4.4vw,40px)/1.15 var(--disp);letter-spacing:-.02e
 article .summary{font-size:19px;color:var(--ink-2);margin:0 0 24px}
 article figure{margin:0 0 28px}
 article figure img{border-radius:8px;background:var(--surface);width:100%}
+article figure.video iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:8px;background:var(--surface);display:block}
 article figcaption{font:12px/1.4 var(--mono);color:var(--ink-3);margin-top:8px}
 article h2{font:700 24px/1.25 var(--disp);margin:40px 0 12px;letter-spacing:-.01em}
 .table{overflow-x:auto;margin:16px 0}
@@ -225,9 +226,23 @@ def badge(p: dict) -> str:
     return f'<span class="badge {a}" title="{esc(tip)}">{esc(label)}</span>'
 
 
+def video_id(p: dict) -> str:
+    v = str(p.get("video") or "").strip()
+    return v if re.fullmatch(r"[A-Za-z0-9_-]{11}", v) else ""
+
+
+def card_image(p: dict) -> str:
+    """カードと OGP に使う画像。公式写真が無ければ YouTube 動画のサムネイル。"""
+    if p.get("thumbnail"):
+        return p["thumbnail"]
+    vid = video_id(p)
+    return f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg" if vid else ""
+
+
 def card(p: dict) -> str:
-    thumb = (f'<div class="thumb"><img src="{esc(p["thumbnail"])}" alt="" loading="lazy" '
-             'referrerpolicy="no-referrer"></div>') if p.get("thumbnail") else '<div class="thumb empty">GT</div>'
+    img = card_image(p)
+    thumb = (f'<div class="thumb"><img src="{esc(img)}" alt="" loading="lazy" '
+             'referrerpolicy="no-referrer"></div>') if img else '<div class="thumb empty">GT</div>'
     cat = CATEGORIES.get(p.get("category"), "")
     return f"""<a class="card" href="{p['url']}">{thumb}<div>
 <div class="meta"><time datetime="{p['date']}">{p['date']:%b %d, %Y}</time><span>{esc(cat)}</span>{badge(p)}</div>
@@ -252,6 +267,13 @@ def render_post(site: dict, p: dict) -> str:
         credit = f"<figcaption>Image: {esc(p.get('thumbnail_credit'))}</figcaption>" if p.get("thumbnail_credit") else ""
         fig = (f'<figure><img src="{esc(p["thumbnail"])}" alt="{esc(p["title"])}" '
                f'referrerpolicy="no-referrer">{credit}</figure>')
+    vid = video_id(p)
+    if vid:
+        vcredit = f"<figcaption>Video: {esc(p.get('video_credit'))}</figcaption>" if p.get("video_credit") else ""
+        fig += (f'<figure class="video"><iframe src="https://www.youtube-nocookie.com/embed/{vid}" '
+                f'title="{esc(p["title"])}" loading="lazy" allowfullscreen '
+                'allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"></iframe>'
+                f'{vcredit}</figure>')
     srcs = ""
     if p.get("sources"):
         items = "".join(
@@ -268,11 +290,11 @@ def render_post(site: dict, p: dict) -> str:
         "author": {"@type": "Organization", "name": site["author"]},
         "publisher": {"@type": "Organization", "name": site["author"]},
     }
-    if p.get("thumbnail"):
-        ld["image"] = [p["thumbnail"]]
+    if card_image(p):
+        ld["image"] = [card_image(p)]
     ld_tag = f'<script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>'
     cat = CATEGORIES.get(p.get("category"), "")
-    return head(site, p["title"], p["summary"], p["url"], p.get("thumbnail", ""), ld_tag, "article") + f"""<main><div class="wrap">
+    return head(site, p["title"], p["summary"], p["url"], card_image(p), ld_tag, "article") + f"""<main><div class="wrap">
 <article>
 <div class="meta"><time datetime="{p['date']}">{p['date']:%b %d, %Y}</time><span>{esc(cat)}</span>{badge(p)}</div>
 <h1>{esc(p['title'])}</h1>

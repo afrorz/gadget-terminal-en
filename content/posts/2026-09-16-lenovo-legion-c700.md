@@ -5,6 +5,8 @@ date: 2026-09-16
 category: gaming
 summary: "A 556g Android handheld built to stream games from the cloud or your own PC, with an 8,000mAh battery and TMR sticks. 2,199 yuan in China, $399 from an importer."
 availability: import
+video: A3nAnuGMrbU
+video_credit: "ETA PRIME on YouTube (hands-on)"
 sources:
   - title: "Lenovo Legion C700"
     url: https://item.lenovo.com.cn/product/1057241.html
