@@ -5,7 +5,12 @@ date: 2026-11-18
 category: gaming
 summary: "GPD has confirmed a WIN Mini with Intel's Arc G3 Extreme chip and 12 Xe3 graphics cores. Reports disagree on the screen size and battery. There is no price or release date."
 availability: global
+thumbnail: "https://img.website.xin/contents/sitefiles3601/18006016/images/177076251.png"
+thumbnail_credit: "GPD official product page"
 sources:
+  - title: "GPD WIN Mini Ultra"
+    url: https://www.gpd.hk/gpdwinminiultra
+    publisher: GPD (official product page)
   - title: "Neuer Gaming-Handheld kommt: GPDs Win Mini Ultra setzt auf Intels Arc G3 Extreme"
     url: https://www.pcgameshardware.de/Handheld-PC-Hardware-279763/News/Neuer-Gaming-Handheld-GPD-Win-Mini-Ultra-Intel-Arc-G3-Extreme-1558408/
     publisher: PC Games Hardware
