@@ -20,6 +20,8 @@ concurrency:
 
 jobs:
   build:
+    # 記事づくりが失敗した回は出さない
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

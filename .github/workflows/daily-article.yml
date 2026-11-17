@@ -49,6 +49,8 @@ jobs:
           MANUAL_URL: ${{ github.event.inputs.url }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Claude の GitHub アプリはこのリポジトリに入れていないので、ワークフローの鍵を使う
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           show_full_output: true
           claude_args: |
             --max-turns 200
