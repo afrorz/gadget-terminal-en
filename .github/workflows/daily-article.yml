@@ -67,7 +67,7 @@ jobs:
           new=$(git ls-files --others --exclude-standard content/posts)
           [ -z "$new" ] && { echo "新しい記事なし"; exit 0; }
           for f in $new; do
-            python3 scripts/check_posts.py "$f" || { echo "点検に通らないので外す: $f"; rm -f "$f"; }
+            python3 scripts/check_posts.py --online "$f" || { echo "点検に通らないので外す: $f"; rm -f "$f"; }
           done
           python3 scripts/build.py
           git add content/posts

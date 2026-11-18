@@ -75,7 +75,8 @@
    - `product:` はトップの出発案内板に出す短い製品名(例: "GPD WIN Mini Ultra"、"Mijia Flashlight")。4語まで
    - `from:` はメーカー本社の都市を「空港コード 都市名」で(例: "SZX Shenzhen"、"PEK Beijing"、"PVG Shanghai"、
      "HND Tokyo"、"KIX Osaka"、"ICN Seoul"、"TPE Taipei"、"BLR Bengaluru"、"MUC Munich"、"CDG Paris")。公式サイトの会社情報などで確かめられたときだけ書き、分からなければ行ごと省く
-   - 写真か動画を1つは付ける(付け方は下の「写真と動画」)。どちらも見つからなければ行ごと省く
+   - 写真か動画を1つは付ける(付け方は下の「写真と動画」)。**どちらも見つからない製品は記事にしない。**
+     書く前に写真か動画を探し、見つからなければその候補を見送って次の候補へ進む(写真の無い記事は点検で落ちて公開されない。2026-11-18 本人の指示)
    - 本文は 350〜700 語。見出しは `## Specs`(表)・`## Why it is interesting`・
      `## Can you get it outside <国名>?` を基本にし、必要なら足す。<国名> は `scripts/regions.py` の名前と同じにする
      (例: China、Japan、South Korea、India、Europe、Germany、the UK)。違うと点検で落ちる
@@ -83,13 +84,14 @@
      続けて Where / The catch / Global version / Alternatives you can buy locally を箇条書きで
 7. 3本書いたら `python3 scripts/check_posts.py --online content/posts/<TODAY>-*.md` と
    `python3 scripts/build.py` を実行する。NG が出たら直す。直せない記事は消す。
-   `--online` は写真が開けるか・動画が実在するかも確かめる。写真が開けないときは写真の行を消して直す
-   (記事ごと消さない)。
-8. 最後の報告に、写真も動画も付けられなかった記事と、写真を探しに行った先(開けなかった URL)を書く。
+   `--online` は写真が開けるか・動画が実在するかも確かめる。写真が開けないときは、別の公式写真か動画に差し替える。
+   どちらも無ければ記事ごと消して、次の候補で書き直す。
+8. 最後の報告に、写真も動画も見つからずに見送った候補と、写真を探しに行った先(開けなかった URL)を書く。
 
 ## 写真と動画
 
 上から順に試して、取れたところで止める。**1本ごとに必ず探す。** 出典がニュースサイトだけで終わらせない。
+**写真も動画も無い記事は公開しない**(点検でエラーになる)。
 
 1. **メーカー公式の製品写真**(`thumbnail` + `thumbnail_credit`)
    - 公式の製品ページを探す: WebSearch で「<ブランド> <型番>」「<ブランド> <型番> 官网」。

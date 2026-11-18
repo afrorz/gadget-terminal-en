@@ -4,8 +4,9 @@
     python scripts/check_posts.py FILE [FILE]  # only these
     python scripts/check_posts.py --online FILE  # also open the image / video URLs
 
---online: the thumbnail must return an image and the YouTube video must exist
-(checked through YouTube's oEmbed). A post with neither prints a warning, not an error.
+Every post needs a photo (thumbnail) or a YouTube video. --online: the thumbnail must
+return an image and the YouTube video must exist
+(checked through YouTube's oEmbed).
 """
 from __future__ import annotations
 
@@ -83,6 +84,8 @@ def check(path: Path, online: bool = False) -> list[str]:
     for s in fm.get("sources") or []:
         if not (isinstance(s, dict) and str(s.get("url", "")).startswith("http")):
             errs.append(f"bad source {s}")
+    if not fm.get("thumbnail") and not fm.get("video"):
+        errs.append("no photo or video (posts without one are not published)")
     if fm.get("thumbnail") and not fm.get("thumbnail_credit"):
         errs.append("thumbnail without thumbnail_credit")
     if fm.get("video"):
@@ -121,9 +124,6 @@ def main() -> int:
             print(f"NG {f.name}: " + "; ".join(errs))
         else:
             print(f"OK {f.name}")
-        text = f.read_text(encoding="utf-8")
-        if not re.search(r"^(thumbnail|video):\s*\S", text.split("\n---", 1)[0], re.M):
-            print(f"   warning: {f.name} has no photo or video")
     return 1 if bad else 0
 
 
