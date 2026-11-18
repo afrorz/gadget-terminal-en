@@ -18,9 +18,9 @@
 - 見た目は日本語版 GT と同じ(空港の出発案内板)。日本語版から写したスタイルは `design/gt-base.css`、英語版だけの追加は `scripts/build.py` の `EN_CSS`
 - 英文は短い文で。煽らない、感嘆符を使わない
 
-## 毎朝の自動の記事づくり(2026-11-18〜)
+## 毎日の自動の記事づくり(2026-11-18〜)
 
-- `.github/workflows/daily-article.yml` が毎日 06:30 JST 指定(実際は遅れる)で3本書く。手順と決まりは `docs/daily-prompt.md`(**記事の書き方を変えるときはここを直す**)
+- `.github/workflows/daily-article.yml` が毎日 18:00 JST 指定(実際は遅れる。北米の朝に並べるため。11/18 までは 06:30)で3本書く。手順と決まりは `docs/daily-prompt.md`(**記事の書き方を変えるときはここを直す**)
 - 流れ: `scripts/candidates.py` が日本語版のダイジェスト(公開リポジトリから読むだけ)の中国がらみの物と、日本・韓国・インド・ヨーロッパのニュースの RSS(`REGION_FEEDS`)から候補を `data/candidates.md` に国ごとに出す → Claude が書く → `scripts/check_posts.py` に通らない記事は外す → push → `deploy.yml` が公開
 - Claude の利用枠を使う。鍵はリポジトリの secret `CLAUDE_CODE_OAUTH_TOKEN`
 - 手動で1本書かせる: Actions の「Daily articles」を Run workflow で URL を入れて回す
