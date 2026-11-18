@@ -17,11 +17,12 @@ from pathlib import Path
 
 import yaml
 
+from regions import REGIONS, outside_heading
+
 ROOT = Path(__file__).resolve().parent.parent
 CATEGORIES = {"phones", "pc", "gaming", "audio", "home", "weird"}
-AVAILABILITY = {"china-only", "import", "global"}
-REQUIRED = ["title", "slug", "date", "category", "summary", "availability", "sources"]
-OUTSIDE = "## Can you get it outside China?"
+AVAILABILITY = {"home-only", "import", "global"}
+REQUIRED = ["title", "slug", "date", "category", "summary", "origin", "availability", "sources"]
 UA = "GadgetTerminalEN-check/1.0 (+https://en.gadgetterminal.com/)"
 
 
@@ -70,6 +71,8 @@ def check(path: Path, online: bool = False) -> list[str]:
             errs.append(f"missing {k}")
     if fm.get("category") and fm["category"] not in CATEGORIES:
         errs.append(f"bad category {fm['category']}")
+    if fm.get("origin") and str(fm["origin"]).lower() not in REGIONS:
+        errs.append(f"bad origin {fm['origin']} (use a code from scripts/regions.py)")
     if fm.get("availability") and fm["availability"] not in AVAILABILITY:
         errs.append(f"bad availability {fm['availability']}")
     slug = str(fm.get("slug", ""))
@@ -90,8 +93,9 @@ def check(path: Path, online: bool = False) -> list[str]:
     if online:
         errs += check_online(fm)
 
-    if OUTSIDE not in body:
-        errs.append(f"missing section '{OUTSIDE}'")
+    outside = outside_heading(fm)
+    if outside not in body:
+        errs.append(f"missing section '{outside}'")
     if "!" in re.sub(r"!\[|<!--|!=", "", body) or "!" in str(fm.get("title", "")):
         errs.append("exclamation mark")
     if re.search(r"[぀-ヿ]", body + str(fm.get("title", ""))):
@@ -99,8 +103,9 @@ def check(path: Path, online: bool = False) -> list[str]:
     words = len(re.findall(r"[A-Za-z]+", body))
     if words < 250:
         errs.append(f"too short ({words} words)")
-    if re.search(r"\byuan\b", body, re.I) and re.search(r"\(\s*(about|approx\.?|~)\s*\$", body, re.I):
-        errs.append("yuan converted to dollars")
+    if re.search(r"\b(yuan|yen|won|rupees?|baht|dong|ringgit|pesos?)\b", body, re.I) and \
+            re.search(r"\(\s*(about|approx\.?|~)\s*\$", body, re.I):
+        errs.append("local price converted to dollars")
     return errs
 
 

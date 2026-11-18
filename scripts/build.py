@@ -19,6 +19,8 @@ from pathlib import Path
 import markdown
 import yaml
 
+from regions import region
+
 ROOT = Path(__file__).resolve().parent.parent
 CONTENT = ROOT / "content" / "posts"
 PUBLIC = ROOT / "public"
@@ -32,12 +34,13 @@ CATEGORIES = {
     "home": "Home & Smart Devices",
     "weird": "Weird & Wonderful",
 }
+# availability -> (badge label, tooltip). {name}/{short} come from the post's origin.
 AVAILABILITY = {
-    "china-only": ("China only", "No official sales outside China yet"),
+    "home-only": ("{short} only", "No official sales outside {name} yet"),
     "import": ("Import", "Available through import stores"),
-    "global": ("Global", "Sold officially outside China"),
+    "global": ("Global", "Sold officially outside {name}"),
 }
-OUTSIDE_RE = re.compile(r"can you (get|buy) it outside china", re.I)
+OUTSIDE_RE = re.compile(r"can you (get|buy) it outside", re.I)
 
 
 def esc(s) -> str:
@@ -80,7 +83,7 @@ def mark_outside_section(body: str) -> str:
     for part in parts:
         h = re.match(r"<h2>(.*?)</h2>", part)
         if h and OUTSIDE_RE.search(h.group(1)):
-            part = f'<section class="outside" id="outside-china">{part}</section>'
+            part = f'<section class="outside" id="outside">{part}</section>'
         out.append(part)
     return "".join(out)
 
@@ -101,7 +104,7 @@ CAT_CODES = {
 }
 # availability -> (board status, status class, short note)
 STATUS = {
-    "china-only": ("CHINA ONLY", "st-urgent", "no global sale"),
+    "home-only": ("{short} ONLY", "st-urgent", "no global sale"),
     "import": ("IMPORT", "st-warn", "via importers"),
     "global": ("GLOBAL", "st-live", "sold worldwide"),
 }
@@ -113,7 +116,7 @@ EN_CSS = """
   padding:3px 5px;border-radius:3px;margin-left:10px}
 .av{display:inline-block;font:600 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
   padding:4px 6px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
-.av.china-only{color:var(--accent)}
+.av.home-only{color:var(--accent)}
 .av.import{color:#c08a1e}
 .av.global{color:#2f9e6a}
 [data-theme="dark"] .av.import{color:#d9b45f}
@@ -158,7 +161,7 @@ h.querySelector("[data-theme-toggle]").addEventListener("click",function(){
   if(next==="dark")document.documentElement.setAttribute("data-theme","dark");
   else document.documentElement.removeAttribute("data-theme");
   try{localStorage.setItem("gt-theme",next);}catch(e){}});
-function tick(){var t=new Date(Date.now()+28800000);
+function tick(){var t=new Date();
   var hh=String(t.getUTCHours()).padStart(2,"0"),mm=String(t.getUTCMinutes()).padStart(2,"0");
   h.querySelectorAll('[data-clk="h"]').forEach(function(e){e.textContent=hh;});
   h.querySelectorAll('[data-clk="m"]').forEach(function(e){e.textContent=mm;});}
@@ -216,7 +219,7 @@ def head(site: dict, title: str, desc: str, path: str, image: str = "", ld: str 
 <a class="brand" href="/"><span class="brand-name">Gadget Terminal</span><span class="caret" aria-hidden="true"></span><span class="brand-ed">EN</span></a>
 <nav class="nav">{nav_html()}</nav>
 <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch dark or light mode"><span class="tt-ic tt-ic-moon" aria-hidden="true">☾</span><span class="tt-ic tt-ic-sun" aria-hidden="true">☀</span></button>
-<span class="head-clock" aria-hidden="true" title="Beijing time"><small>CST</small><b data-clk="h">--</b><i>:</i><b data-clk="m">--</b></span>
+<span class="head-clock" aria-hidden="true" title="Coordinated Universal Time"><small>UTC</small><b data-clk="h">--</b><i>:</i><b data-clk="m">--</b></span>
 <button type="button" class="menu-btn" data-menu-toggle aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
 </div>
 </header>
@@ -243,7 +246,8 @@ def badge(p: dict) -> str:
     a = p.get("availability")
     if a not in AVAILABILITY:
         return ""
-    label, tip = AVAILABILITY[a]
+    name, short, _ = region(p)
+    label, tip = (t.format(name=name, short=short.title() if len(short) > 2 else short) for t in AVAILABILITY[a])
     return f'<span class="av {a}" title="{esc(tip)}">{esc(label)}</span>'
 
 
@@ -291,8 +295,9 @@ def card(p: dict) -> str:
 def board_row(p: dict, n: int) -> str:
     k = p.get("category") or ""
     code = CAT_CODES.get(k, ("GT", ""))[0]
-    frm_code, _, frm_city = str(p.get("from") or "CN China").partition(" ")
+    frm_code, _, frm_city = str(p.get("from") or region(p)[2]).partition(" ")
     st, cls, note = STATUS.get(p.get("availability"), ("TBC", "st-plain", ""))
+    st = st.format(short=region(p)[1])
     img = card_image(p)
     thumb = (f'<img src="{esc(img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" '
              'width="96" height="96">' if img else "")
@@ -317,8 +322,8 @@ def board(posts: list[dict], total: int) -> str:
     rows = "\n".join(board_row(p, total - i) for i, p in enumerate(posts))
     return f"""<section class="board">
 <h2 class="visually-hidden">Departures</h2>
-<div class="board-title"><span class="board-tab" aria-selected="true">{PLANE}<span class="board-title-en">DEPARTURES</span><span class="board-tab-ja">Latest from China</span></span></div>
-<div class="board-head"><span>FLIGHT</span><span>FROM</span><span>CAT</span><span>KEY</span><span>ENTRY</span><span>OUTSIDE CHINA</span><span></span></div>
+<div class="board-title"><span class="board-tab" aria-selected="true">{PLANE}<span class="board-title-en">DEPARTURES</span><span class="board-tab-ja">Latest arrivals</span></span></div>
+<div class="board-head"><span>FLIGHT</span><span>FROM</span><span>CAT</span><span>KEY</span><span>ENTRY</span><span>ABROAD</span><span></span></div>
 {rows}
 </section>"""
 
@@ -336,7 +341,7 @@ def grid(posts: list[dict]) -> str:
 def render_index(site: dict, posts: list[dict]) -> str:
     return head(site, site["title"], site["description"], "/") + f"""<main class="wrap home">
 <section class="hero">
-<p class="eyebrow">CHINA ONLY / ENGLISH EDITION</p>
+<p class="eyebrow">LOCAL RELEASES / ENGLISH EDITION</p>
 <h1 class="hero-title">{esc(site['tagline'])}</h1>
 <p class="hero-sub">{esc(site['description'])}</p>
 <img class="hero-route" src="/assets/hero-plane.png" alt="" aria-hidden="true">
@@ -351,11 +356,11 @@ def render_category(site: dict, key: str, posts: list[dict]) -> str:
     name = CATEGORIES[key]
     path = f"/category/{key}/"
     count = f"{len(posts)} article{'s' if len(posts) != 1 else ''}"
-    return head(site, name, f"{name}: China-only gadgets explained in English.", path) + f"""<main class="wrap home cat-{key}">
+    return head(site, name, f"{name}: gadgets sold in only one country or region, explained in English.", path) + f"""<main class="wrap home cat-{key}">
 <section class="hero hero-sm">
 <p class="eyebrow">GATE {code} / {esc(name)}</p>
 <h1 class="hero-title">{esc(name)}</h1>
-<p class="hero-sub">{count}. China-only gadgets, and whether you can get one outside China.</p>
+<p class="hero-sub">{count}. Gadgets sold in only one country or region, and whether you can get one elsewhere.</p>
 </section>
 {grid(posts)}
 </main>""" + footer(site)
@@ -423,23 +428,23 @@ def render_page(site: dict, path: str, title: str, desc: str, body_md: str) -> s
 </main>""" + footer(site)
 
 
-ABOUT = """Gadget Terminal covers new gadgets that launch **only in China**: on Xiaomi Youpin, JD.com, Tmall and Chinese crowdfunding platforms.
+ABOUT = """Gadget Terminal covers new gadgets that launch in **only one country or region**: China, Japan, South Korea, the rest of Asia, and Europe.
 
-English tech sites often report the specs and the price in yuan. We add the part that matters if you live outside China: **can you actually get one?**
+Many of them never get an English write-up. When they do, it is usually the specs and a local price. We add the part that matters if you live somewhere else: **can you actually get one?**
 
-Every article ends with a section called *Can you get it outside China?* It covers:
+Every article ends with a section called *Can you get it outside (country)?* It covers:
 
 - where you can buy it today (official global store, import shops, or buying agents)
 - whether a global version has been announced
 - whether we could confirm FCC (US) or CE (EU) certification
-- what works and what does not outside China (apps, cloud services, language)
+- what works and what does not abroad (apps, cloud services, language, voltage and plugs)
 - alternatives you can buy locally
 
 ## Our rules
 
 - We only use numbers that appear in official pages or in the reports we cite. If something is not confirmed, we say so.
-- Prices and availability are as of the date of each article.
-- We list our sources at the end of every article, including Chinese-language sources.
+- Prices and availability are as of the date of each article. We keep prices in the local currency and do not convert them.
+- We list our sources at the end of every article, including sources in Chinese, Japanese, Korean and European languages.
 - We do not accept payment for coverage.
 
 ## Who we are

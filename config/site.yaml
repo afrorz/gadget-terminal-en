@@ -1,7 +1,7 @@
 site:
   title: Gadget Terminal
-  tagline: "China-only gadgets, and whether you can actually get one."
-  description: "New gadgets launched only in China, explained in English, with a straight answer on how to get one outside China: import routes, global versions, certification and alternatives."
+  tagline: "Gadgets sold in only one country, and whether you can actually get one."
+  description: "New gadgets launched only in China, Japan, Korea, the rest of Asia or Europe, explained in English, with a straight answer on how to get one elsewhere: import routes, global versions, certification and alternatives."
   base_url: https://en.gadgetterminal.com
   domain: en.gadgetterminal.com
   lang: en

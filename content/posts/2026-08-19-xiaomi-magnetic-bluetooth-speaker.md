@@ -4,7 +4,8 @@ slug: xiaomi-magnetic-bluetooth-speaker
 date: 2026-08-19
 category: audio
 summary: "Xiaomi is crowdfunding a 95g Bluetooth speaker that sticks to the back of your phone and powers on when it touches it. 132 yuan in China, no global launch yet."
-availability: china-only
+origin: cn
+availability: home-only
 product: "Xiaomi Magnetic Speaker"
 from: "PEK Beijing"
 thumbnail: "https://img.youpin.mi-img.com/youpin_gms/095d254b_c200_465c_a42f_3e808b20867b.jpeg@base@tag=imgScale&F=webp&h=1080&w=1080"

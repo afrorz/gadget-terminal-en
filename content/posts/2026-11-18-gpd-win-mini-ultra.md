@@ -4,6 +4,7 @@ slug: gpd-win-mini-ultra
 date: 2026-11-18
 category: gaming
 summary: "GPD's spec sheet is out: Intel's Arc G3 Extreme, an 8-inch 120Hz screen, a 56Wh battery and 845g. GPD lists a global warranty and plugs for the US, UK, EU and Japan, but there is no price yet."
+origin: cn
 availability: global
 product: "GPD WIN Mini Ultra"
 from: "SZX Shenzhen"

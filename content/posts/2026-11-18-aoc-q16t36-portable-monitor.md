@@ -4,7 +4,8 @@ slug: aoc-q16t36-portable-monitor
 date: 2026-11-18
 category: pc
 summary: "A 16-inch 2.5K IPS portable monitor with 120Hz, two USB-C ports and 45W pass-through charging. It costs 999 yuan on JD.com. AOC has not announced a sale outside China."
-availability: china-only
+origin: cn
+availability: home-only
 product: "AOC Q16T36"
 sources:
   - title: "AOC releases new portable monitor with dual USB-C, 45W charging and slim design"

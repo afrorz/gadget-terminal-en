@@ -4,7 +4,8 @@ slug: obe-r3-ultra-max-projector
 date: 2026-09-14
 category: home
 summary: "A 1080p projector from a Chinese brand you have probably never heard of, with a built-in gimbal for ceiling projection and a real subwoofer in the base. 3,999 yuan, China only."
-availability: china-only
+origin: cn
+availability: home-only
 product: "OBE R3 Ultra Max"
 thumbnail: "https://img14.360buyimg.com/pop/jfs/t1/408207/31/14100/31559/69c5fc61F9095d520/0083320320c0c1b2.png"
 thumbnail_credit: "OBE (大眼橙) official JD.com store page"
