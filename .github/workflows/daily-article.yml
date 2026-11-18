@@ -32,7 +32,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
 
-      - name: 日本語版のダイジェストから中国がらみの候補を出す
+      - name: 日本語版のダイジェストと各国のニュースから候補を出す
         run: python3 scripts/candidates.py
 
       - name: Claude Code CLI を入れる
