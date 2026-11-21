@@ -39,6 +39,8 @@
    上の「選ぶもの」に合う物を、良い順に選ぶ。候補で3本に届かなければ、IT之家
    (https://www.ithome.com/)・Xiaomi Youpin・JD.com・家電Watch の新製品から自分で探してよい。
    `grep -ril "<製品名>" content/posts/` で、同じ製品の記事が無いことを確かめる。
+   **詳しく調べる前に、写真か動画が取れそうかを先に当たる**(下の「写真と動画」の1と2を手短に試す)。
+   取れない候補に時間をかけず、すぐ次へ進む。
 4. 1本ごとに、事実を確かめる。確かめ方は上から順に試す。
    - メーカー公式サイト(例: ugreen.com、aoc.com.cn、mi.com、dynabook.com、samsung.com/sec)の製品ページ。
      WebSearch で「<ブランド> <型番> 官网」「<ブランド> <型番> 公式」も探す
@@ -50,9 +52,11 @@
      その場合、本文で「according to IT之家 and ...」のように出どころを示す
    - 日本の製品は PR TIMES やメーカーのニュースリリース(プレスリリース)も公式として使ってよい
    出典どうしで数字が食い違ったら、片方を選ばず両方を出どころつきで書く(例: 2560×1600 per Notebookcheck, 2560×1440 per IT之家)。
-   **見送ってよいのは、記事が1本しか見つからず数字を突き合わせられない物だけ。**
+   **見送ってよいのは、(a) 記事が1本しか見つからず数字を突き合わせられない物と、(b) 写真も動画も見つからない物だけ。**
    見送ったら次の候補へ進み、3本に届くまで探し続ける(候補 → IT之家・家電Watch の新製品 → Gizmochina の順)。
-   全部見ても届かないときに限って、書けた本数で終える。
+   **早くあきらめない。** 3本に届くまで、少なくとも20候補は試す。`data/candidates.md` を最後まで見て、
+   さらに IT之家・家電Watch・Gizmochina の新製品も見たうえで届かないときに限って、書けた本数で終える
+   (2026-11-21 に7候補だけ見て1本で終えたことがある。このとき候補は105件あった)。
 5. 「発売国の外で手に入るか」を調べる。WebSearch で次を探す。
    - 公式の海外ストア・海外版の発表(「global version」「global launch」)
    - 輸入の道:
@@ -99,8 +103,12 @@
    - 製品ページの写真の URL は、WebFetch に「このページの og:image と、製品写真の画像 URL を全部、そのまま書き出して」と頼んで取る。
      WebFetch は本文を文章にして返すので、普通に読むと写真の URL が落ちる。必ずこの頼み方をする
    - `curl -sL <製品ページ> | grep -oE 'og:image[^>]*'` でも取れることがある
-   - 使ってよいのはメーカー公式サイトと公式の店(mi.com、Youpin、JD/Tmall の公式店)の写真だけ。
-     ニュースサイト・輸入店・AliExpress の写真は使わない
+   - 製品ページが 403 などで開けないときは、同じメーカーの別の公式の場所を当たる:
+     ニュースリリース(プレスリリース)のページ、英語の世界向けサイト、
+     **PR TIMES(prtimes.jp)のそのメーカー自身の発表**(日本の製品で特に有効。画像はメーカーが自分で載せた物)
+   - 使ってよいのはメーカー公式サイト・メーカー自身の発表(ニュースリリース・PR TIMES のメーカーの発表)・
+     公式の店(mi.com、Youpin、JD/Tmall の公式店)の写真だけ。
+     ニュースサイト(家電Watch などの記事の写真)・輸入店・AliExpress の写真は使わない
    - その製品の写真であること(色違い・前の世代・別の型番でないこと)を、画像の URL やページの説明で確かめる
 2. **YouTube の動画**(`video` + `video_credit`)。公式写真が無いときだけ
    - WebSearch で「<ブランド> <型番>」を `allowed_domains: ["youtube.com"]` で探す
@@ -114,6 +122,7 @@
 ```yaml
 thumbnail: "https://www.gpd.hk/...product.png"
 thumbnail_credit: "GPD official product page"
+# PR TIMES のメーカーの発表のとき: thumbnail_credit: "Sanwa Supply press release (PR TIMES)"
 # 公式写真が無いときだけ
 video: A3nAnuGMrbU
 video_credit: "ETA PRIME on YouTube (hands-on)"

@@ -1,11 +1,13 @@
 name: Daily articles
 
 on:
-  # 読者の中心は北米。北米の朝(東部 5:00〜7:00ごろ)に記事が並ぶよう、日本時間の夕方に走らせる
-  # (2026-11-18 本人と決定。それまでは 06:30 JST)。アジアのその日の発表がそろい、日本語版 GT の
-  # 朝の収集も済んでいる時刻。GitHub の定時実行は遅れることがあるので、実際に出るのは 19:00〜21:00 JST ごろ。
+  # 読者の中心は北米。北米の朝(東部 5:00〜7:00ごろ)に記事が並ぶよう、日本時間 18:00 に走らせる
+  # (2026-11-18 本人と決定。それまでは 06:30 JST)。
+  # 本命は本人の PC の予定タスク「GT英語版_記事づくり」(cockpit\gt_en_daily_trigger.py)が 18:00 に
+  # workflow_dispatch で起こす方。GitHub の定時実行は8〜9時間遅れて夜中に動いたため(11/20・11/21)、
+  # 下の schedule は予備にして、日本時間 17:00〜23:59 に届いたときだけ書く(gate)。
   schedule:
-    - cron: "0 9 * * *"   # 18:00 JST
+    - cron: "30 9 * * *"   # 18:30 JST(予備)
   workflow_dispatch:
     inputs:
       url:
@@ -18,7 +20,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.g.outputs.go }}
+    steps:
+      - id: g
+        run: |
+          h=$(TZ=Asia/Tokyo date +%H)
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$h" -lt 17 ]; then
+            echo "予定の実行が遅れて日本時間 ${h} 時に届いたので書かない(夜中に記事が出るのを防ぐ)"
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
   write:
+    needs: gate
+    if: needs.gate.outputs.go == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
