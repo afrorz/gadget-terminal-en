@@ -39,7 +39,7 @@ jobs:
     needs: gate
     if: needs.gate.outputs.go == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150
     permissions:
       contents: write
       id-token: write
@@ -64,7 +64,9 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/claude" --version
 
-      - uses: anthropics/claude-code-action@v1
+      - name: 記事を書く(1回目)
+        id: write1
+        uses: anthropics/claude-code-action@v1
         env:
           MANUAL_URL: ${{ github.event.inputs.url }}
         with:
@@ -77,6 +79,67 @@ jobs:
             --allowedTools "WebSearch,WebFetch,Read,Write,Edit,Glob,Grep,Bash"
           prompt: |
             docs/daily-prompt.md を読み、その手順どおりに今日の記事を書いてください。
+            commit と push はしないでください(このあとのステップがします)。
+
+      - name: 点検を通る記事が3本あるか数える(1回目のあと)
+        id: count1
+        run: |
+          ok=0
+          for f in $(git ls-files --others --exclude-standard content/posts); do
+            python3 scripts/check_posts.py "$f" >/dev/null && ok=$((ok+1))
+          done
+          echo "点検を通る新しい記事: $ok 本"
+          if [ -z "${{ github.event.inputs.url }}" ] && [ "$ok" -lt 3 ]; then echo "need=true" >> "$GITHUB_OUTPUT"; else echo "need=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: 記事を書く(2回目)
+        id: write2
+        if: steps.count1.outputs.need == 'true'
+        uses: anthropics/claude-code-action@v1
+        env:
+          MANUAL_URL: ${{ github.event.inputs.url }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Claude の GitHub アプリはこのリポジトリに入れていないので、ワークフローの鍵を使う
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          show_full_output: true
+          claude_args: |
+            --max-turns 200
+            --allowedTools "WebSearch,WebFetch,Read,Write,Edit,Glob,Grep,Bash"
+          prompt: |
+            docs/daily-prompt.md を読み、その手順どおりに今日の記事を書いてください。
+            これは 2 回目です。前の回で3本に届きませんでした。content/posts/ にある今日の記事と data/tried.md を読み、
+            data/tried.md に無い候補から、合わせて3本になるまで書き足してください。
+            commit と push はしないでください(このあとのステップがします)。
+
+      - name: 点検を通る記事が3本あるか数える(2回目のあと)
+        id: count2
+        if: steps.count1.outputs.need == 'true'
+        run: |
+          ok=0
+          for f in $(git ls-files --others --exclude-standard content/posts); do
+            python3 scripts/check_posts.py "$f" >/dev/null && ok=$((ok+1))
+          done
+          echo "点検を通る新しい記事: $ok 本"
+          if [ -z "${{ github.event.inputs.url }}" ] && [ "$ok" -lt 3 ]; then echo "need=true" >> "$GITHUB_OUTPUT"; else echo "need=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: 記事を書く(3回目)
+        id: write3
+        if: steps.count2.outputs.need == 'true'
+        uses: anthropics/claude-code-action@v1
+        env:
+          MANUAL_URL: ${{ github.event.inputs.url }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Claude の GitHub アプリはこのリポジトリに入れていないので、ワークフローの鍵を使う
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          show_full_output: true
+          claude_args: |
+            --max-turns 200
+            --allowedTools "WebSearch,WebFetch,Read,Write,Edit,Glob,Grep,Bash"
+          prompt: |
+            docs/daily-prompt.md を読み、その手順どおりに今日の記事を書いてください。
+            これは 3 回目です。前の回で3本に届きませんでした。content/posts/ にある今日の記事と data/tried.md を読み、
+            data/tried.md に無い候補から、合わせて3本になるまで書き足してください。
             commit と push はしないでください(このあとのステップがします)。
 
       - name: 点検を通った記事だけを公開する
