@@ -187,6 +187,11 @@ def head(site: dict, title: str, desc: str, path: str, image: str = "", ld: str 
     if site.get("cf_analytics_token"):
         cf = ('<script defer src="https://static.cloudflareinsights.com/beacon.min.js" '
               f"data-cf-beacon='{{\"token\": \"{esc(site['cf_analytics_token'])}\"}}'></script>")
+    gid = str(site.get("analytics_id") or "").strip()
+    if gid:
+        cf += (f'<script async src="https://www.googletagmanager.com/gtag/js?id={esc(gid)}"></script>'
+               "<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}"
+               f"gtag('js',new Date());gtag('config','{esc(gid)}');</script>")
     return f"""<!doctype html>
 <html lang="{site['lang']}">
 <head>
@@ -457,7 +462,7 @@ PRIVACY = """This site is operated by {author}.
 ## Analytics
 
 We may use Cloudflare Web Analytics to count visits. It does not use cookies and does not track you across sites.
-
+{ga}
 ## Advertising and affiliate links
 
 Some pages may contain advertising or affiliate links in the future. If we add them, we will update this page, and affiliate links will be marked.
@@ -520,6 +525,9 @@ def build() -> int:
     (PUBLIC / "assets" / "style.css").write_text(css_bundle(), encoding="utf-8")
 
     fill = {"author": site["author"], "ja_url": site["ja_url"], "email": site["contact_email"]}
+    fill["ga"] = ("\nWe use Google Analytics to understand which pages are read. It uses cookies; you can refuse them "
+                  "in your browser settings or with the [Google Analytics opt-out add-on](https://tools.google.com/dlpage/gaoptout).\n"
+                  if str(site.get("analytics_id") or "").strip() else "")
     write("/", render_index(site, posts))
     for p in posts:
         write(p["url"], render_post(site, p))

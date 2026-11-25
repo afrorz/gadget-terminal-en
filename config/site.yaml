@@ -13,3 +13,5 @@ site:
   ja_url: https://gadgetterminal.com/
   # Cloudflare Web Analytics token for this hostname. Empty = no analytics tag.
   cf_analytics_token: ""
+  # Google Analytics 4 measurement ID (G-...). Empty = no GA tag.
+  analytics_id: "G-16VVT7BF7P"
